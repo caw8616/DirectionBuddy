@@ -19,12 +19,16 @@ import kotlinx.android.synthetic.main.activity_direction_buddy.*
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import android.content.Intent
+import android.support.annotation.NonNull
 import android.view.ContextMenu
 import android.view.Menu
 import android.view.MenuItem
 import com.example.catherine.directionbuddy.DetailFragment.Companion.PERMISSIONS_REQUEST_READ_CONTACTS
+import com.example.catherine.directionbuddy.R.id.menu_logout
 import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
+import org.jetbrains.anko.startActivityForResult
 
 
 class DirectionBuddy : AppCompatActivity() {
@@ -107,19 +111,12 @@ class DirectionBuddy : AppCompatActivity() {
             }
         }
 
-
-
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build()
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
         if(signedIn === false) {
-            navigation.visibility = View.INVISIBLE
-            sign_in_button.visibility = View.VISIBLE
-            sign_in_button.setOnClickListener{
-                signIn()
-            }
-
+            displaySignInScreen()
         } else {
             val fragment = DirectionFragment.newInstance(userId, username)
             supportFragmentManager
@@ -130,6 +127,18 @@ class DirectionBuddy : AppCompatActivity() {
                     .commit()
         }
     }
+    fun displaySignInScreen() {
+        navigation.visibility = View.INVISIBLE
+        sign_in_button.visibility = View.VISIBLE
+        sign_in_button.setOnClickListener{
+            signIn()
+        }
+
+    }
+    fun removeSignInScreen() {
+        navigation.visibility = View.VISIBLE
+        sign_in_button.visibility = View.INVISIBLE
+    }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main, menu)
@@ -138,7 +147,7 @@ class DirectionBuddy : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when(item!!.itemId) {
-//            R.id.menu_logout-> AboutDialog().show(supportFragmentManager, "about")
+            R.id.menu_logout-> if(signedIn === true)signOut()
         }
         return super.onOptionsItemSelected(item)
     }
@@ -148,7 +157,24 @@ class DirectionBuddy : AppCompatActivity() {
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
 
+    private fun signOut() {
+        mGoogleSignInClient!!.signOut().addOnCompleteListener(this,
+                OnCompleteListener<Void>() {
+                if (it.isSuccessful) {
+                    displaySignInScreen()
+                    signedIn = false
+                    signedInAccount = null
+                    clearBackStack()
+                }
+            })
+    }
 
+    fun clearBackStack() {
+        val fm = supportFragmentManager
+        for (i in 0 until fm.backStackEntryCount) {
+            fm.popBackStack()
+        }
+    }
 
     override fun onBackPressed() {
         //prevent the app from exiting on back button and/or going to a blank screen
@@ -186,8 +212,7 @@ class DirectionBuddy : AppCompatActivity() {
             signedIn = true
             signedInAccount = account
 
-            navigation.visibility = View.VISIBLE
-            sign_in_button.visibility = View.INVISIBLE
+            removeSignInScreen()
             userId = account.id!!.toString()
             username = account.email!!
 
