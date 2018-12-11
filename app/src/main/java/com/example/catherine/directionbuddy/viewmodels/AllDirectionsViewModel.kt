@@ -28,6 +28,9 @@ class AllDirectionsViewModel : AndroidViewModel {
     fun insertDirection(direction: Direction) {
         mDirectionsRepository!!.insertDirection(direction)
     }
+    fun insertAll(directions: List<Direction>) {
+        mDirectionsRepository!!.insertAllDirections(directions)
+    }
 
     fun updateDirection(direction: Direction) {
         mDirectionsRepository!!.updateDirection(direction)

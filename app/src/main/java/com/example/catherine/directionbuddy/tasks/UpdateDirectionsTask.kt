@@ -19,6 +19,7 @@ class UpdateDirectionsTask (
         var state: String,
         var zip: String,
         var contact: String,
+        var category: String,
         var user_id: Int,
         context: Context): AsyncTask<Unit, Unit, Boolean>() {
 

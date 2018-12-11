@@ -19,6 +19,7 @@ class AddDirectionsTask (
         var state: String,
         var zip: String,
         var contact: String,
+        var category: String,
         var user_id: Int,
         context: Context): AsyncTask<Unit, Unit, Boolean>() {
 
@@ -29,10 +30,10 @@ class AddDirectionsTask (
         try {
             var paramString="";
             if(contact == null) {
-                paramString = "name=" + name + "&address=" + address + "&city=" + city + "&state=" + state + "&zip" + zip + "&contact=null&user_id=" + user_id;
+                paramString = "name=" + name + "&address=" + address + "&city=" + city + "&state=" + state + "&zip" + zip + "&category="+category+"&contact=null&user_id=" + user_id;
 
             } else {
-                paramString = "name=" + name + "&address=" + address + "&city=" + city + "&state=" + state + "&zip" + zip + "&contact=" + contact + "&user_id=" + user_id;
+                paramString = "name=" + name + "&address=" + address + "&city=" + city + "&state=" + state + "&zip" + zip +"&category="+category+ "&contact=" + contact + "&user_id=" + user_id;
                 // [{"id":"1", ,"name":"My House","address":"531 Robert Quigley Drive","city":"Scottsville",
                 // "state":"NY","zip":"14546","country":"US","contact":null,"user_id":null}]
             }

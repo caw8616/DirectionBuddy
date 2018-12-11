@@ -331,7 +331,7 @@ class DetailFragment : Fragment(),
         return photo
     }
 
-    override fun onDialogFinished(id: Int, name: String, address: String, city: String, state: String, zip: String, category: String, contact: Contact?) {
+    override fun onDialogFinished(id: Int, name: String, address: String, city: String, state: String, zip: String, category: String?, contact: Contact?) {
         doAsync {
 
             val direction = Direction(

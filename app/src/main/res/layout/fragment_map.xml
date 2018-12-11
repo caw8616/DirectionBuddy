@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MapFragment">
+    tools:context=".MapFragment"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <fragment
         android:id="@+id/map"
@@ -12,13 +13,23 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!--<android.support.design.widget.FloatingActionButton-->
+        <!--android:id="@+id/fab"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="bottom|end"-->
+        <!--android:layout_marginRight="8dp"-->
+        <!--android:layout_marginBottom="212dp"-->
+        <!--android:src="@android:drawable/ic_menu_search"/>-->
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/fabDirection"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginRight="8dp"
+        android:layout_gravity="end|bottom"
+        android:tint="@android:color/white"
+        app:layout_anchor="@id/recycler_viewDirection"
+        app:layout_anchorGravity="bottom|end"
         android:layout_marginBottom="112dp"
-        android:src="@android:drawable/ic_menu_search"/>
-
+        app:srcCompat="@android:drawable/ic_input_add"
+        app:useCompatPadding="true"/>
 </FrameLayout>

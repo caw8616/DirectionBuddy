@@ -16,6 +16,7 @@ import com.example.catherine.directionbuddy.entities.Contact
 import com.example.catherine.directionbuddy.entities.Direction
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import java.util.Locale.filter
 
 
 /**
@@ -37,6 +38,10 @@ class EditDirectionDialog : DialogFragment(), AdapterView.OnItemSelectedListener
     var direction: Direction? = null
     private lateinit var spinner: Spinner
     var listener: OnDialogFinishedListener? = null
+    private lateinit var categorySpinner: Spinner
+
+    val categories = arrayListOf<String>("Select a Category", "Family", "Friend", "Work", "School", "Doctor", "Store", "Other")
+    var selectedCategory:String? = null
 
     companion object {
 
@@ -77,7 +82,22 @@ class EditDirectionDialog : DialogFragment(), AdapterView.OnItemSelectedListener
         cityField.setText(direction!!.city, TextView.BufferType.EDITABLE);
         stateField.setText(direction!!.state, TextView.BufferType.EDITABLE);
         zipField.setText(direction!!.zip, TextView.BufferType.EDITABLE);
-        categoryField.setText(direction!!.category, TextView.BufferType.EDITABLE);
+//        categoryField.setText(direction!!.category, TextView.BufferType.EDITABLE);
+
+
+        categorySpinner = view.findViewById(R.id.categoryEditText) as Spinner
+        val catAdapter = ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, categories)
+        catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        categorySpinner.adapter = catAdapter
+        if (direction!!.category == null) {
+            categorySpinner.setSelection(0)
+        } else {
+            categorySpinner.setSelection(categories.indexOf(direction!!.category))
+
+        }
+
+        categorySpinner.setOnItemSelectedListener(this)
+
 
         if(direction!!.contact == null) {
             spinner.setSelection(0)
@@ -102,12 +122,12 @@ class EditDirectionDialog : DialogFragment(), AdapterView.OnItemSelectedListener
                             listener?.onDialogFinished(direction!!.id!!, nameField.text.toString(),
                                     addressField.text.toString(), cityField.text.toString(),
                                     stateField.text.toString(), zipField.text.toString(),
-                                    categoryField.text.toString(), selectedContact)
+                                    selectedCategory, selectedContact)
                         }
                     }
                 })
                 .setNegativeButton("Cancel", DialogInterface.OnClickListener { _, _ ->
-                    this@EditDirectionDialog.getDialog().cancel()
+                    this@EditDirectionDialog.dialog.cancel()
                 })
 
         return builder.create()
@@ -116,20 +136,42 @@ class EditDirectionDialog : DialogFragment(), AdapterView.OnItemSelectedListener
 
     override fun onItemSelected(parent: AdapterView<*>, v: View, position: Int, id: Long) {
         Log.d("SPINNER",position.toString())
-        if(position == 0) {
-            selectedContact = null
-        } else {
-            Log.d("SPINNER", contacts[position-1].toString())
+        when (v.id) {
+            R.id.categoryEditText->{
+                if (position == 0) {
+                    selectedCategory = null
+                } else {
 
-            selectedContact = contacts[position-1]
+                    selectedCategory = categories.get(position)
+                }
+            }
+            R.id.contactSpinner->{
+                if (position == 0) {
+                    selectedContact = null
+                } else {
+                    Log.d("SPINNER", contacts[position - 1].toString())
+
+                    selectedContact = contacts[position - 1]
+                }
+            }
         }
+//        if(v.id == R.id.contactSpinner) {
+//
+//            if (position == 0) {
+//                selectedContact = null
+//            } else {
+//                Log.d("SPINNER", contacts[position - 1].toString())
+//
+//                selectedContact = contacts[position - 1]
+//            }
+//        }
     }
 
     override fun onNothingSelected(parent: AdapterView<*>?) {
     }
 
     interface OnDialogFinishedListener {
-        fun onDialogFinished(id: Int, name: String, address: String, city: String, state: String, zip: String, category: String, contact: Contact?)
+        fun onDialogFinished(id: Int, name: String, address: String, city: String, state: String, zip: String, category: String?, contact: Contact?)
     }
 
 }

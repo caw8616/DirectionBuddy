@@ -42,6 +42,8 @@ class DirectionBuddy : AppCompatActivity() {
     var userId = ""
     var username = ""
     var name = ""
+    var contacts = ArrayList<Contact>()
+
 
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
@@ -50,7 +52,7 @@ class DirectionBuddy : AppCompatActivity() {
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_map -> {
-                addFragment(MapFragment.newInstance(userId, username))
+                addFragment(MapFragment.newInstance(userId, username, contacts))
 //                message.setText(R.string.title_dashboard)
                 return@OnNavigationItemSelectedListener true
             }
@@ -116,6 +118,8 @@ class DirectionBuddy : AppCompatActivity() {
         if(signedIn === false) {
             displaySignInScreen()
         } else {
+            loadContacts()
+
             val fragment = DirectionFragment.newInstance(userId, username)
             supportFragmentManager
                     .beginTransaction()
@@ -242,7 +246,7 @@ class DirectionBuddy : AppCompatActivity() {
         } else {
             Log.d("Contacts", "Permission Granted...")
 
-            builder = getContacts()
+            getContacts()
 //            listContacts.text = builder.toString()
 //            Log.d("Contacts", builder.toString())
         }
@@ -259,7 +263,7 @@ class DirectionBuddy : AppCompatActivity() {
             }
         }
     }
-    private fun getContacts(): ArrayList<Contact> {
+    private fun getContacts(){
         Log.d("Contacts", "Getting Contacts...")
 
 //        val builder = ArrayList<Contact>()
@@ -267,7 +271,7 @@ class DirectionBuddy : AppCompatActivity() {
         val cursor = resolver.query(ContactsContract.Contacts.CONTENT_URI, null,
                 null, null, null)
 //        Log.d("Contacts", "Curser count..."+cursor.count)
-        val contacts = ArrayList<Contact>()
+        val conts = ArrayList<Contact>()
 
         if (cursor.count > 0) {
             while (cursor.moveToNext()) {
@@ -311,14 +315,15 @@ class DirectionBuddy : AppCompatActivity() {
                 }
                 cursorAddress.close()
 
-                contacts.add(contact)
+                conts.add(contact)
             }
         } else {
 //               toast("No contacts available!")
         }
         cursor.close()
+        contacts = conts
         Log.d("Contacts", contacts.toString())
-        return contacts
+
     }
 }
 

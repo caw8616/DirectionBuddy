@@ -16,6 +16,7 @@ import org.jetbrains.anko.uiThread
 
 class AddDirectionDialog : DialogFragment(),  AdapterView.OnItemSelectedListener {
 
+    private lateinit var errorField : TextView
     private lateinit var nameField : EditText
     private lateinit var addressField : EditText
     private lateinit var cityField : EditText
@@ -27,6 +28,9 @@ class AddDirectionDialog : DialogFragment(),  AdapterView.OnItemSelectedListener
     var selectedContact:Contact? = null
     private lateinit var spinner: Spinner
     var listener: OnDialogFinishedListener? = null
+    private lateinit var categorySpinner: Spinner
+    val categories = arrayListOf<String>("Select a Category", "Family", "Friend", "Work", "School", "Doctor", "Store", "Other")
+    var selectedCategory:String? = null
 
     companion object {
         @JvmStatic
@@ -46,12 +50,26 @@ class AddDirectionDialog : DialogFragment(),  AdapterView.OnItemSelectedListener
         val inflater = activity!!.layoutInflater
         var view = inflater.inflate(R.layout.add_direction, null)
         //need these here, can use kotlinx extentions in onCreateDialog
+        errorField = view.findViewById(R.id.errorText)
+
         nameField = view.findViewById(R.id.nameEditText)
         addressField = view.findViewById(R.id.addressEditText)
         cityField = view.findViewById(R.id.cityEditText)
         stateField = view.findViewById(R.id.stateEditText)
         zipField = view.findViewById(R.id.zipEditText)
-        categoryField = view.findViewById(R.id.categoryEditText)
+
+//        categoryField = view.findViewById(R.id.categoryEditText)
+
+        categorySpinner = view.findViewById(R.id.categoryEditText) as Spinner
+        val catAdapter = ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, categories)
+        catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        categorySpinner.adapter = catAdapter
+        categorySpinner.setSelection(0)
+
+        categorySpinner.setOnItemSelectedListener(this)
+
+
+
 //        contactField = view.findViewById(R.id.contactEditText)
         spinner = view.findViewById(R.id.contactSpinner) as Spinner
         val adapter = ArrayAdapter<String>(context,
@@ -69,30 +87,47 @@ class AddDirectionDialog : DialogFragment(),  AdapterView.OnItemSelectedListener
                     // save the info
                     doAsync {
                         //should do validation here!!!!!!
-
-                        uiThread {
+                       uiThread {
+//                        var string = "THERE WAS AN ERROR WITH YOUR INPUT!!!!!!!!!!!"
+//                        it.errorField.text = string
+//                        Toast.makeText(context, string, Toast.LENGTH_LONG)
+//                        Log.d("VALIDATE",it.dialog.)
                             listener?.onDialogFinished(nameField.text.toString(),
                                     addressField.text.toString(), cityField.text.toString(),
                                     stateField.text.toString(), zipField.text.toString(),
-                                    categoryField.text.toString(), selectedContact)
+                                    selectedCategory, selectedContact)
                         }
+
                     }
                 })
                 .setNegativeButton("Cancel", DialogInterface.OnClickListener { _, _ ->
-                    this@AddDirectionDialog.getDialog().cancel()
+                    this@AddDirectionDialog.dialog.cancel()
                 })
 
         return builder.create()
 
     }
     override fun onItemSelected(parent: AdapterView<*>, v: View, position: Int, id: Long) {
-        if(position == 0) {
-            selectedContact = null
-        } else {
-            Log.d("SPINNER", contacts[position-1].toString())
+        when (v.id) {
+            R.id.categoryEditText->{
+                if (position == 0) {
+                    selectedCategory = null
+                } else {
 
-            selectedContact = contacts[position-1]
+                    selectedCategory = categories.get(position)
+                }
+            }
+            R.id.contactSpinner->{
+                if (position == 0) {
+                    selectedContact = null
+                } else {
+                    Log.d("SPINNER", contacts[position - 1].toString())
+
+                    selectedContact = contacts[position - 1]
+                }
+            }
         }
+
 
     }
 
@@ -100,6 +135,6 @@ class AddDirectionDialog : DialogFragment(),  AdapterView.OnItemSelectedListener
     }
 
     interface OnDialogFinishedListener {
-        fun onDialogFinished(name: String, address: String, city: String, state: String, zip: String, category: String, contact: Contact?)
+        fun onDialogFinished(name: String, address: String, city: String, state: String, zip: String, category: String?, contact: Contact?)
     }
 }

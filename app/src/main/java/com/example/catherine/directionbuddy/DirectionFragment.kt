@@ -128,7 +128,7 @@ class DirectionFragment : Fragment(),
                 }
     }
 
-    override fun onDialogFinished(name: String, address: String, city: String, state: String, zip: String, category: String, contact: Contact?) {
+    override fun onDialogFinished(name: String, address: String, city: String, state: String, zip: String, category: String?, contact: Contact?) {
         doAsync {
 
             val direction = Direction(
