@@ -17,6 +17,9 @@ interface DirectionDao :BaseDao<Direction> {
     @Query("SELECT * FROM DirectionData WHERE user_id = :userId")
     fun findDirectionsByUserId(userId: String): List<Direction>
 
+    @Query("SELECT * FROM DirectionData WHERE id = :directionId")
+    fun findDirectionsByDirectionId(directionId: Int): List<Direction>
+
     @Insert
     fun insertAll(bills: List<Direction>)
 

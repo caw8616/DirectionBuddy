@@ -1,11 +1,16 @@
 package com.example.catherine.directionbuddy
 
+import android.Manifest
 import android.arch.lifecycle.Observer
+import android.content.ContentResolver
+import android.content.pm.PackageManager
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
@@ -41,7 +46,9 @@ private const val USERNAME = "username"
  * create an instance of this fragment.
  *
  */
-class DirectionFragment : Fragment(),  AddDirectionDialog.OnDialogFinishedListener {
+class DirectionFragment : Fragment(),
+        AddDirectionDialog.OnDialogFinishedListener,
+        DirectionAdapter.ItemClickedListener {
 
     var mAdapter: DirectionAdapter? = null
     private var recyclerView : RecyclerView? = null
@@ -53,7 +60,7 @@ class DirectionFragment : Fragment(),  AddDirectionDialog.OnDialogFinishedListen
 
     private var userId: String = ""
     private var username: String = ""
-    private var contacts = ArrayList<Contact>()
+    var contacts = ArrayList<Contact>()
 
 
     //swipe to delete
@@ -68,10 +75,11 @@ class DirectionFragment : Fragment(),  AddDirectionDialog.OnDialogFinishedListen
             username = it.getString(USERNAME)
 //            contacts = it.getParcelableArrayList<Contact>(CONTACTS)
         }
+        loadContacts()
         directionsViewModel = AllDirectionsViewModel(activity?.application!!, userId!!)
 
         mAdapter = DirectionAdapter(this,
-                mutableListOf<Direction>())
+                mutableListOf<Direction>(), this)
 
 
         directionsViewModel!!.getAllDirections().observe(this, Observer {
@@ -83,7 +91,7 @@ class DirectionFragment : Fragment(),  AddDirectionDialog.OnDialogFinishedListen
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        (activity as AppCompatActivity).supportActionBar?.title = "Direction: "+ username
+        (activity as AppCompatActivity).supportActionBar?.title = "MyDirections"
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_direction, container, false)
         recyclerView = view.findViewById(R.id.recycler_viewDirection) as RecyclerView
@@ -108,17 +116,16 @@ class DirectionFragment : Fragment(),  AddDirectionDialog.OnDialogFinishedListen
 
     companion object {
         @JvmStatic
-        fun newInstance(userId: String, username :String, _contacts: ArrayList<Contact> ) =
+        fun newInstance(userId: String, username :String ) =
                 DirectionFragment().apply {
                     arguments = Bundle().apply {
                         putString(USER_ID, userId)
                         putString(USERNAME, username)
-                        contacts = _contacts
                     }
                 }
     }
 
-    override fun onDialogFinished(name: String, address: String, city: String, state: String, zip: String, category: String) {
+    override fun onDialogFinished(name: String, address: String, city: String, state: String, zip: String, category: String, contact: Contact?) {
         doAsync {
 
             val direction = Direction(
@@ -128,7 +135,7 @@ class DirectionFragment : Fragment(),  AddDirectionDialog.OnDialogFinishedListen
                     city = city,
                     state = state,
                     zip = zip,
-                    contact = null,
+                    contact = if(contact != null)contact.id else null,
                     category = category,
                     user_id = userId!!)
 
@@ -200,7 +207,120 @@ class DirectionFragment : Fragment(),  AddDirectionDialog.OnDialogFinishedListen
         itemTouchHelper.attachToRecyclerView(recyclerView)
 
     } //setRecyclerViewItemTouchListener
+    //new *** added
+    override fun onItemClicked(directionId: Int, directionName: String) {
+        val fragment = DetailFragment.newInstance(userId,directionId, directionName)
+        activity!!.supportFragmentManager
+                .beginTransaction()
+                .setCustomAnimations(R.anim.design_bottom_sheet_slide_in, R.anim.design_bottom_sheet_slide_out)
+                .add(R.id.content, fragment, fragment.javaClass.getSimpleName())
+                .addToBackStack(fragment.javaClass.getSimpleName())
+                .commit()
 
+    }
+    private fun loadContacts() {
+        Log.d("Contacts", "Loading Contacts...")
+        var builder = StringBuilder()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && activity!!.checkSelfPermission(
+                        Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            Log.d("Contacts", "Permission Not Granted...")
+
+            requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS),
+                    DetailFragment.PERMISSIONS_REQUEST_READ_CONTACTS)
+            //callback onRequestPermissionsResult
+        } else {
+            Log.d("Contacts", "Permission Granted...")
+
+            builder = getContacts()
+//            listContacts.text = builder.toString()
+//            Log.d("Contacts", builder.toString())
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+                                            grantResults: IntArray) {
+        if (requestCode == DetailFragment.PERMISSIONS_REQUEST_READ_CONTACTS) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("Contacts", "After Request permission granted...")
+
+                loadContacts()
+            } else {
+                Log.d("Contacts", "After Request permission not granted...")
+
+                //  toast("Permission must be granted in order to display contacts information")
+            }
+        }
+    }
+
+    private fun getContacts(): StringBuilder {
+        Log.d("Contacts", "Getting Contacts...")
+
+        val builder = StringBuilder()
+        val resolver: ContentResolver = activity!!.contentResolver;
+        val cursor = resolver.query(ContactsContract.Contacts.CONTENT_URI, null,
+                null, null, null)
+//        Log.d("Contacts", "Curser count..."+cursor.count)
+        val cont = ArrayList<Contact>()
+
+        if (cursor.count > 0) {
+            while (cursor.moveToNext()) {
+//                Log.d("Contacts", "Contact Display Name: "+cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts)))
+//                ContactsContract.Contacts.
+                val contact = Contact()
+
+                val id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID))
+                contact.id = id
+                val name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
+                contact.name = name;
+                val phoneNumber = (cursor.getString(
+                        cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))).toInt()
+//                Log.d("Contacts", "Contact: "+id+" "+name+" "+phoneNumber)
+
+                if (phoneNumber > 0) {
+                    val phoneNums = ArrayList<String>()
+                    val cursorPhone = activity!!.contentResolver.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?", arrayOf(id), null)
+
+                    if(cursorPhone.count > 0) {
+                        while (cursorPhone.moveToNext()) {
+                            val phoneNumValue = cursorPhone.getString(
+                                    cursorPhone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                            builder.append("Contact: ").append(name).append(", Phone Number: ").append(
+                                    phoneNumValue).append("\n\n")
+//                            Log.e("Name ===>",phoneNumValue);
+                            phoneNums.add(phoneNumValue)
+                        }
+                    }
+                    contact.phoneNumber = phoneNums
+                    cursorPhone.close()
+                }
+
+
+                val cursorAddress = activity!!.contentResolver.query(
+                        ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_URI,null,
+                        ContactsContract.CommonDataKinds.StructuredPostal.CONTACT_ID+ "=?",  arrayOf(id), null)
+//                Log.d("Contacts", "Curser Address count..."+cursorAddress.count)
+
+                if (cursorAddress.count > 0) {
+                    while (cursorAddress.moveToNext()) {
+                        val address = cursorAddress.getString(cursorAddress.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS))
+                        contact.address = address
+                    }
+                }
+                cursorAddress.close()
+
+                cont.add(contact)
+            }
+        } else {
+//               toast("No contacts available!")
+        }
+        cursor.close()
+        Log.d("Contacts", contacts.toString())
+        contacts = cont
+        return builder
+    }
 
 // ****
 }

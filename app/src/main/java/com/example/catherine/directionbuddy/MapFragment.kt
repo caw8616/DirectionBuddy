@@ -75,9 +75,9 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
 
 
     companion object {
-        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
-        private const val REQUEST_CHECK_SETTINGS = 2
-        private const val PLACE_PICKER_REQUEST = 3
+        const val LOCATION_PERMISSION_REQUEST_CODE = 1
+        const val REQUEST_CHECK_SETTINGS = 2
+        const val PLACE_PICKER_REQUEST = 3
         @JvmStatic
         fun newInstance(_userId: String, _username :String ) =
                 MapFragment().apply {

@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.example.catherine.directionbuddy.DetailFragment
 import com.example.catherine.directionbuddy.DirectionFragment
 import com.example.catherine.directionbuddy.R
 import com.example.catherine.directionbuddy.entities.Direction
@@ -15,55 +16,38 @@ import kotlinx.android.synthetic.main.card_layout.view.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 
-
-class DirectionAdapter(private var fragment: DirectionFragment, private var mData: List<Direction>,
+class DetailAdapter(private var fragment: DetailFragment, private var mData: List<Direction>,
                        private var listener: ItemClickedListener)
     : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val VIEW_TYPE_EMPTY = 0
     private val VIEW_TYPE_DIRECTIONS = 1
 
-    private var mRecentlyDeletedDirection : Direction? = null
-    private var mRecentlyDeletedPosition : Int? = null
 
     fun addAll(directions: List<Direction>) {
         mData = directions
         notifyDataSetChanged()
     }
-    //swipe to remove
-    fun removeItem(item: Int, directionsViewModel: AllDirectionsViewModel) {
-        doAsync {
 
-            mRecentlyDeletedPosition = item
-            mRecentlyDeletedDirection = mData[item]
+//
+//    private fun showUndoSnackbar() {
+//        val view = fragment.activity!!.findViewById<CoordinatorLayout>(R.id.detailCoordinatorLayout)
+//        //should be a string resource
+//        val snackbar = Snackbar.make(view, "Do you want to undo the delete?",
+//                Snackbar.LENGTH_LONG)
+//        //should be a string resource
+//        snackbar.setAction("Undo") {
+//            undoDelete()
+//        }
+//        snackbar.show()
+//    }
 
-            directionsViewModel!!.deleteDirection(mData[item])
-
-            uiThread {
-                //notifyItemRemoved(item) //don't need because of postValue
-                showUndoSnackbar()
-            }
-        }
-    }
-
-    private fun showUndoSnackbar() {
-        val view = fragment.activity!!.findViewById<CoordinatorLayout>(R.id.invoiceCoordinatorLayout)
-        //should be a string resource
-        val snackbar = Snackbar.make(view, "Do you want to undo the delete?",
-                Snackbar.LENGTH_LONG)
-        //should be a string resource
-        snackbar.setAction("Undo") {
-            undoDelete()
-        }
-        snackbar.show()
-    }
-
-    private fun undoDelete() {
-        doAsync {
-            fragment.directionsViewModel!!.insertDirection(mRecentlyDeletedDirection!!)
-
-        }
-    }
+//    private fun undoDelete() {
+//        doAsync {
+//            fragment.directionsViewModel!!.insertDirection(mRecentlyDeletedDirection!!)
+//
+//        }
+//    }
     //****
     override fun getItemCount(): Int {
         if(mData.size == 0){
@@ -90,15 +74,18 @@ class DirectionAdapter(private var fragment: DirectionFragment, private var mDat
         //***** Probably should show customer name someplace....
         val v: View
         val vh: RecyclerView.ViewHolder
-        if (viewType == VIEW_TYPE_DIRECTIONS) {
-            v = LayoutInflater.from(viewGroup.context)
-                    .inflate(R.layout.card_layout, viewGroup, false)
+        v = LayoutInflater.from(viewGroup.context)
+                    .inflate(R.layout.fragment_detail, viewGroup, false)
             vh = ViewHolder(v)
-        } else {
-            v = LayoutInflater.from(viewGroup.context)
-                    .inflate(R.layout.empty_direction_layout, viewGroup, false)
-            vh = ViewHolderEmpty(v)
-        }
+//        if (viewType == VIEW_TYPE_DIRECTIONS) {
+//            v = LayoutInflater.from(viewGroup.context)
+//                    .inflate(R.layout.card_layout, viewGroup, false)
+//            vh = ViewHolder(v)
+//        } else {
+//            v = LayoutInflater.from(viewGroup.context)
+//                    .inflate(R.layout.empty_direction_layout, viewGroup, false)
+//            vh = ViewHolderEmpty(v)
+//        }
 
         return vh
     }
@@ -127,19 +114,12 @@ class DirectionAdapter(private var fragment: DirectionFragment, private var mDat
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)  {
 
         var directionName: TextView
-//        var directionAddress: TextView
-//        var directionCity: TextView
-//        var directionState: TextView
-//        var directionZip: TextView
         var directionId: Int? = null
 
 
         init {
             directionName = itemView.directionName
-//            directionAddress = itemView.directionAddress
-//            directionCity = itemView.directionCity
-//            directionState = itemView.directionState
-//            directionZip = itemView.directionZip
+
             itemView.setOnClickListener(object : View.OnClickListener {
                 override fun onClick(customer: View?) {
                     listener.onItemClicked(directionId!!, directionName.text.toString())

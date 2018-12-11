@@ -20,7 +20,10 @@ class AllDirectionsViewModel : AndroidViewModel {
     fun getAllDirections(): LiveData<List<Direction>> {
         return mDirectionsRepository!!.mAllDirections
     }
-
+    fun getDiectionById(directionId: Int): LiveData<List<Direction>>{
+        mDirectionsRepository!!.getByDirectionId(directionId)
+        return mDirectionsRepository!!.mAllDirections
+    }
 
     fun insertDirection(direction: Direction) {
         mDirectionsRepository!!.insertDirection(direction)

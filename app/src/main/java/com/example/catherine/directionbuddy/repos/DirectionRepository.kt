@@ -11,6 +11,7 @@ class DirectionRepository(var application: Application, var userId: String) {
     private var _allDirections: List<Direction> = listOf<Direction>()
     var mAllDirections : MutableLiveData<List<Direction>> = MutableLiveData()
 
+
     private var database : DirectionBuddyDatabase = DirectionBuddyDatabase.getInstance(application)
 
     init {
@@ -20,7 +21,16 @@ class DirectionRepository(var application: Application, var userId: String) {
             mAllDirections.postValue(_allDirections)
         }
     } //init
-
+    fun getByDirectionId(directionId: Int) {
+        doAsync {
+            _allDirections = database.directionDao().findDirectionsByDirectionId(directionId)
+            //need to update live data, we are just going to get them all
+            //probably should do more efficient way
+//
+//            _allDirections = database.directionDao().findDirectionsByUserId(userId)
+            mAllDirections.postValue(_allDirections)
+        }
+    }
     fun insertDirection(direction: Direction) {
         doAsync {
             database.directionDao().insert(direction)
