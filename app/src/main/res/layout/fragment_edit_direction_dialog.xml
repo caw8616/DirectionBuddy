@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="Enter direction information:"
+        android:text="Edit direction information:"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
@@ -106,7 +106,6 @@
         android:orientation="vertical"
         app:layout_constraintGuide_begin="101dp" />
 
-
     <EditText
         android:id="@+id/nameEditText"
         android:layout_width="0dp"
@@ -173,7 +172,6 @@
         app:layout_constraintStart_toEndOf="@+id/guideline"
         app:layout_constraintTop_toBottomOf="@+id/stateEditText" />
 
-
     <EditText
         android:id="@+id/categoryEditText"
         android:layout_width="0dp"
@@ -197,7 +195,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/guideline"
         app:layout_constraintTop_toBottomOf="@+id/categoryEditText"/>
-
 
 
 </android.support.constraint.ConstraintLayout>

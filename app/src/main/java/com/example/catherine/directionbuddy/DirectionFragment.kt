@@ -70,6 +70,8 @@ class DirectionFragment : Fragment(),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        (activity as AppCompatActivity).supportActionBar?.title = "MyDirections"
+
         arguments?.let {
             userId = it.getString(USER_ID)
             username = it.getString(USERNAME)
@@ -98,8 +100,6 @@ class DirectionFragment : Fragment(),
         layoutManager = LinearLayoutManager(context)
         recyclerView!!.layoutManager = layoutManager
         recyclerView!!.adapter = mAdapter
-
-
 
         fab = view.findViewById<FloatingActionButton>(R.id.fabDirection)
 
@@ -144,7 +144,6 @@ class DirectionFragment : Fragment(),
             uiThread {
                 Toast.makeText(context,"Direction Added", Toast.LENGTH_SHORT)
                         .show()
-
             }
         }
     }
@@ -161,7 +160,6 @@ class DirectionFragment : Fragment(),
 
             override fun onMove(p0: RecyclerView, p1: RecyclerView.ViewHolder, p2: RecyclerView.ViewHolder): Boolean {
                 return false //don't want to do anything here
-
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, swipeDir: Int) {
@@ -243,11 +241,9 @@ class DirectionFragment : Fragment(),
         if (requestCode == DetailFragment.PERMISSIONS_REQUEST_READ_CONTACTS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d("Contacts", "After Request permission granted...")
-
                 loadContacts()
             } else {
                 Log.d("Contacts", "After Request permission not granted...")
-
                 //  toast("Permission must be granted in order to display contacts information")
             }
         }
@@ -266,7 +262,6 @@ class DirectionFragment : Fragment(),
         if (cursor.count > 0) {
             while (cursor.moveToNext()) {
 //                Log.d("Contacts", "Contact Display Name: "+cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts)))
-//                ContactsContract.Contacts.
                 val contact = Contact()
 
                 val id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID))
@@ -296,8 +291,6 @@ class DirectionFragment : Fragment(),
                     contact.phoneNumber = phoneNums
                     cursorPhone.close()
                 }
-
-
                 val cursorAddress = activity!!.contentResolver.query(
                         ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_URI,null,
                         ContactsContract.CommonDataKinds.StructuredPostal.CONTACT_ID+ "=?",  arrayOf(id), null)

@@ -1,7 +1,5 @@
 package com.example.catherine.directionbuddy.adapters
 
-import android.support.design.widget.CoordinatorLayout
-import android.support.design.widget.Snackbar
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -13,11 +11,9 @@ import com.example.catherine.directionbuddy.R
 import com.example.catherine.directionbuddy.entities.Direction
 import com.example.catherine.directionbuddy.viewmodels.AllDirectionsViewModel
 import kotlinx.android.synthetic.main.card_layout.view.*
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
 
-class DetailAdapter(private var fragment: DetailFragment, private var mData: List<Direction>,
-                       private var listener: ItemClickedListener)
+
+class DetailAdapter(private var fragment: DetailFragment, private var mData: List<Direction>)
     : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val VIEW_TYPE_EMPTY = 0
@@ -29,25 +25,6 @@ class DetailAdapter(private var fragment: DetailFragment, private var mData: Lis
         notifyDataSetChanged()
     }
 
-//
-//    private fun showUndoSnackbar() {
-//        val view = fragment.activity!!.findViewById<CoordinatorLayout>(R.id.detailCoordinatorLayout)
-//        //should be a string resource
-//        val snackbar = Snackbar.make(view, "Do you want to undo the delete?",
-//                Snackbar.LENGTH_LONG)
-//        //should be a string resource
-//        snackbar.setAction("Undo") {
-//            undoDelete()
-//        }
-//        snackbar.show()
-//    }
-
-//    private fun undoDelete() {
-//        doAsync {
-//            fragment.directionsViewModel!!.insertDirection(mRecentlyDeletedDirection!!)
-//
-//        }
-//    }
     //****
     override fun getItemCount(): Int {
         if(mData.size == 0){
@@ -77,15 +54,7 @@ class DetailAdapter(private var fragment: DetailFragment, private var mData: Lis
         v = LayoutInflater.from(viewGroup.context)
                     .inflate(R.layout.fragment_detail, viewGroup, false)
             vh = ViewHolder(v)
-//        if (viewType == VIEW_TYPE_DIRECTIONS) {
-//            v = LayoutInflater.from(viewGroup.context)
-//                    .inflate(R.layout.card_layout, viewGroup, false)
-//            vh = ViewHolder(v)
-//        } else {
-//            v = LayoutInflater.from(viewGroup.context)
-//                    .inflate(R.layout.empty_direction_layout, viewGroup, false)
-//            vh = ViewHolderEmpty(v)
-//        }
+
 
         return vh
     }
@@ -105,34 +74,20 @@ class DetailAdapter(private var fragment: DetailFragment, private var mData: Lis
 
             vh.directionId = direction.id
 
-
-
         }
     }
 
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)  {
-
         var directionName: TextView
         var directionId: Int? = null
-
-
         init {
             directionName = itemView.directionName
-
-            itemView.setOnClickListener(object : View.OnClickListener {
-                override fun onClick(customer: View?) {
-                    listener.onItemClicked(directionId!!, directionName.text.toString())
-                }
-            })
         }
     }
 
     inner class ViewHolderEmpty(itemView: View) : RecyclerView.ViewHolder(itemView)  {
 
     }
-    //new ***
-    interface ItemClickedListener  {
-        fun onItemClicked(directionId: Int, directionName: String)
-    }
+
 }

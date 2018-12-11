@@ -29,6 +29,10 @@ class AllDirectionsViewModel : AndroidViewModel {
         mDirectionsRepository!!.insertDirection(direction)
     }
 
+    fun updateDirection(direction: Direction) {
+        mDirectionsRepository!!.updateDirection(direction)
+    }
+
     //other wrapper methods for inserting/deleting, etc.
 //swipe to delete
     fun deleteDirection(direction: Direction) {

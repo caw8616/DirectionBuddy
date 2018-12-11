@@ -24,11 +24,7 @@ import org.jetbrains.anko.uiThread
  */
 class EditDirectionDialog : DialogFragment(), AdapterView.OnItemSelectedListener {
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_edit_direction_dialog, container, false)
-    }
+
     private lateinit var nameField : EditText
     private lateinit var addressField : EditText
     private lateinit var cityField : EditText
@@ -39,12 +35,8 @@ class EditDirectionDialog : DialogFragment(), AdapterView.OnItemSelectedListener
     var contacts = ArrayList<Contact>()
     var selectedContact: Contact? = null
     var direction: Direction? = null
-
-
     private lateinit var spinner: Spinner
-
-
-    public var listener: OnDialogFinishedListener? = null
+    var listener: OnDialogFinishedListener? = null
 
     companion object {
 
@@ -92,7 +84,7 @@ class EditDirectionDialog : DialogFragment(), AdapterView.OnItemSelectedListener
         } else {
             contacts.forEach {
                 if(it.id == direction!!.contact) {
-                    spinner.setSelection(contacts.indexOf(it)-1)
+                    spinner.setSelection(contacts.indexOf(it)+1)
                     selectedContact = it
                 }
                 contactNames.add(it.name)
@@ -100,17 +92,12 @@ class EditDirectionDialog : DialogFragment(), AdapterView.OnItemSelectedListener
         }
         spinner.setOnItemSelectedListener(this)
 
-
-
-        // Inflate and set the layout for the dialog
-        // Pass null as the parent view because its going in the dialog layout
         builder.setView(view)
                 // Add action buttons
                 .setPositiveButton("Save", DialogInterface.OnClickListener { _, _ ->
                     // save the info
                     doAsync {
                         //should do validation here!!!!!!
-
                         uiThread {
                             listener?.onDialogFinished(direction!!.id!!, nameField.text.toString(),
                                     addressField.text.toString(), cityField.text.toString(),
@@ -126,7 +113,9 @@ class EditDirectionDialog : DialogFragment(), AdapterView.OnItemSelectedListener
         return builder.create()
 
     }
+
     override fun onItemSelected(parent: AdapterView<*>, v: View, position: Int, id: Long) {
+        Log.d("SPINNER",position.toString())
         if(position == 0) {
             selectedContact = null
         } else {
@@ -134,14 +123,6 @@ class EditDirectionDialog : DialogFragment(), AdapterView.OnItemSelectedListener
 
             selectedContact = contacts[position-1]
         }
-//        when (position) {
-//            0 -> {
-//            }
-//            1 -> {
-//            }
-//            2 -> {
-//            }
-//        }
     }
 
     override fun onNothingSelected(parent: AdapterView<*>?) {

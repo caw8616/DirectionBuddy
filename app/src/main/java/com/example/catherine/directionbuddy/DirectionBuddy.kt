@@ -1,12 +1,6 @@
 package com.example.catherine.directionbuddy
 
-import android.Manifest
-import android.Manifest.permission_group.CONTACTS
-import android.content.ContentResolver
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.provider.ContactsContract
 import android.support.design.widget.BottomNavigationView
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
@@ -19,12 +13,8 @@ import kotlinx.android.synthetic.main.activity_direction_buddy.*
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import android.content.Intent
-import android.support.annotation.NonNull
-import android.view.ContextMenu
 import android.view.Menu
 import android.view.MenuItem
-import com.example.catherine.directionbuddy.DetailFragment.Companion.PERMISSIONS_REQUEST_READ_CONTACTS
-import com.example.catherine.directionbuddy.R.id.menu_logout
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
@@ -32,7 +22,6 @@ import org.jetbrains.anko.startActivityForResult
 
 
 class DirectionBuddy : AppCompatActivity() {
-
     //718694433470-db2v2o8qtetn7lipk6lvlbnv010g8s21.apps.googleusercontent.com
     companion object {
         val RC_SIGN_IN = 1

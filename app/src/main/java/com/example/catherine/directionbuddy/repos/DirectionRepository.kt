@@ -40,6 +40,15 @@ class DirectionRepository(var application: Application, var userId: String) {
             mAllDirections.postValue(_allDirections)
         }
     }
+    fun updateDirection(direction: Direction) {
+        doAsync {
+            database.directionDao().insert(direction)
+            //need to update live data, we are just going to get them all
+            //probably should do more efficient way
+            _allDirections = database.directionDao().findDirectionsByUserId(userId)
+            mAllDirections.postValue(_allDirections)
+        }
+    }
 
     fun insertAllDirections(directions: List<Direction>) {
         doAsync {

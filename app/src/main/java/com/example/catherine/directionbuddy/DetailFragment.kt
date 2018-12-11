@@ -32,6 +32,8 @@ import android.graphics.Bitmap
 import android.location.Address
 import android.location.Geocoder
 import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
+import android.widget.Toast
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.api.ResolvableApiException
@@ -44,27 +46,20 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 import java.io.IOException
 
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val USER_ID = "userId"
 private const val DIRECTION_ID = "directionId"
 private const val DIRECTION_NAME = "directionName"
 
 
 class DetailFragment : Fragment(),
-        EditDirectionDialog.OnDialogFinishedListener ,
-        DetailAdapter.ItemClickedListener ,
+        EditDirectionDialog.OnDialogFinishedListener,
         OnMapReadyCallback, GoogleMap.OnMarkerClickListener{
 
-
-
     private var fab: FloatingActionButton? = null
-
-
-        // TODO: Rename and change types of parameters
     private var userId: String? = null
     private var directionId: Int? = null
     private var directionName: String? = null
@@ -81,8 +76,6 @@ class DetailFragment : Fragment(),
 
     companion object {
         val PERMISSIONS_REQUEST_READ_CONTACTS = 100
-
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(userId: String, directionId: Int, directionName: String) =
                 DetailFragment().apply {
@@ -105,7 +98,7 @@ class DetailFragment : Fragment(),
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        (activity as AppCompatActivity).supportActionBar?.title = "MyDirections"
+        (activity as AppCompatActivity).supportActionBar?.title = directionName
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_detail, container, false)
         loadContacts()
@@ -114,24 +107,25 @@ class DetailFragment : Fragment(),
         directionsViewModel!!.getDiectionById(directionId!!).observe(this, Observer {
             Log.d("DIRECTIONS", it.toString())
             var direction = it!![0]
-            myDirection = direction
+            updateDetailView(direction)
 
-            nameField.text = direction.name
-            addressField.text = direction.address
-            cityField.text = direction.city
-            stateField.text = direction.state
-            zipField.text = direction.zip
-            categoryField.text = direction.category
-            if(direction.contact != null) {
-                contacts.forEach{
-                    if (it.id == direction.contact) {
-                        contactField.text = it.name
-                        if(it.picUri != null) {
-                            imageView.setImageBitmap(it.picUri)
-                        }
-                    }
-                }
-            }
+            myDirection = direction
+//            nameField.text = direction.name
+//            addressField.text = direction.address
+//            cityField.text = direction.city
+//            stateField.text = direction.state
+//            zipField.text = direction.zip
+//            categoryField.text = direction.category
+//            if(direction.contact != null) {
+//                contacts.forEach{
+//                    if (it.id == direction.contact) {
+//                        contactField.text = it.name
+//                        if(it.picUri != null) {
+//                            imageView.setImageBitmap(it.picUri)
+//                        }
+//                    }
+//                }
+//            }
         })
 
         fab = view.findViewById<FloatingActionButton>(R.id.fabDetail)
@@ -145,8 +139,6 @@ class DetailFragment : Fragment(),
 //        setRecyclerViewItemTouchListener()
 //***
         return view
-        // Inflate the layout for this fragment
-//        return inflater.inflate(R.layout.fragment_detail, container, false)
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -155,10 +147,14 @@ class DetailFragment : Fragment(),
         directionsViewModel = AllDirectionsViewModel(activity?.application!!, userId!!)
         directionsViewModel!!.getDiectionById(directionId!!).observe(this, Observer {
             it!!.forEach {
-                var address = getLatLong(it)
-                if(address != null) {
-                    val currentLatLng = LatLng(address.latitude, address.longitude)
-                    placeDirectionMarkerOnMap(currentLatLng, it.name)
+                Log.d("DETAIL AFTER SUBMIT", it.toString())
+                if (it.id == directionId) {
+                    updateDetailView(it)
+                    var address = getLatLong(it)
+                    if (address != null) {
+                        val currentLatLng = LatLng(address.latitude, address.longitude)
+                        placeDirectionMarkerOnMap(currentLatLng, it.name)
+                    }
                 }
 
             }
@@ -170,37 +166,27 @@ class DetailFragment : Fragment(),
         map.setOnMarkerClickListener(this)
     }
     private fun placeDirectionMarkerOnMap(location: LatLng, title:String) {
-        // 1
         val markerOptions = MarkerOptions().position(location)
         markerOptions.title(title)
-
         map.addMarker(markerOptions)
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 12.0f))
-
     }
 
     override fun onMarkerClick(p0: Marker?): Boolean {
         return false
     }
     private fun getLatLong(direction: Direction): Address? {
-        // 1
+
         val geocoder = Geocoder(context)
         val addresses: List<Address>?
         var address: Address? = null
 
         try {
-            // 2
             addresses = geocoder.getFromLocationName(direction.getAddressString(), 1)
-//            addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
-            // 3
             Log.d("DIRECTIONS", addresses.toString())
 
             if (null != addresses && !addresses.isEmpty()) {
                 address = addresses[0]
-//                addressText+=address.getAddressLine(0)
-////                for (i in 0 until address.maxAddressLineIndex) {
-////                    addressText += if (i == 0) address.getAddressLine(i) else "\n" + address.getAddressLine(i)
-////                }
             }
         } catch (e: IOException) {
             Log.e("MapsActivity", e.localizedMessage)
@@ -235,11 +221,9 @@ class DetailFragment : Fragment(),
         if (requestCode == PERMISSIONS_REQUEST_READ_CONTACTS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d("Contacts", "After Request permission granted...")
-
                 loadContacts()
             } else {
                 Log.d("Contacts", "After Request permission not granted...")
-
                 //  toast("Permission must be granted in order to display contacts information")
             }
         }
@@ -310,6 +294,7 @@ class DetailFragment : Fragment(),
         contacts = cont
         return builder
     }
+
     fun getContactPhoto(contactId:String): Bitmap? {
         var photo: Bitmap? = null
         try {
@@ -327,14 +312,53 @@ class DetailFragment : Fragment(),
         }
         return photo
     }
+
     override fun onDialogFinished(id: Int, name: String, address: String, city: String, state: String, zip: String, category: String, contact: Contact?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+        doAsync {
 
-    override fun onItemClicked(directionId: Int, directionName: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+            val direction = Direction(
+                    id = id,
+                    name = name,
+                    address = address,
+                    city = city,
+                    state = state,
+                    zip = zip,
+                    contact = if (contact != null) contact.id else null,
+                    category = category,
+                    user_id = userId!!)
 
+            directionsViewModel!!.insertDirection(direction = direction)
+
+            uiThread {
+                Toast.makeText(context, "Direction Updated", Toast.LENGTH_SHORT)
+                        .show()
+
+            }
+        }
+    }
+    fun updateDetailView(direction: Direction) {
+        (activity as AppCompatActivity).supportActionBar?.title = direction.name
+        // Inflate the layout for this fragment
+        nameField.text = direction.name
+        addressField.text = direction.address
+        cityField.text = direction.city
+        stateField.text = direction.state
+        zipField.text = direction.zip
+        categoryField.text = direction.category
+        if(direction.contact != null) {
+            contacts.forEach{
+                if (it.id == direction.contact) {
+                    contactField.text = it.name
+                    if(it.picUri != null) {
+                        imageView.setImageBitmap(it.picUri)
+                    } else {
+                        imageView.setImageDrawable(ContextCompat.getDrawable(context!!, R.drawable.ic_account_circle_black_24dp))
+                    }
+                }
+            }
+        }
+
+    }
 
 
 }
