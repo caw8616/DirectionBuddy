@@ -1,7 +1,6 @@
 package com.example.catherine.directionbuddy
 
 import android.Manifest
-import android.Manifest.permission_group.CONTACTS
 import android.app.Activity
 import android.arch.lifecycle.Observer
 import android.content.*
@@ -13,32 +12,25 @@ import android.provider.ContactsContract
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.example.catherine.directionbuddy.adapters.DetailAdapter
-import com.example.catherine.directionbuddy.adapters.DirectionAdapter
 import com.example.catherine.directionbuddy.entities.Contact
 import com.example.catherine.directionbuddy.entities.Direction
 import com.example.catherine.directionbuddy.viewmodels.AllDirectionsViewModel
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import kotlinx.android.synthetic.main.fragment_detail.*
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
 import android.location.Address
 import android.location.Geocoder
+import android.location.Location
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.widget.Toast
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException
-import com.google.android.gms.common.GooglePlayServicesRepairableException
-import com.google.android.gms.common.api.ResolvableApiException
+import com.example.catherine.directionbuddy.DirectionBuddy.Companion.LOCATION_PERMISSION_REQUEST_CODE
+import com.example.catherine.directionbuddy.DirectionBuddy.Companion.PERMISSIONS_REQUEST_READ_CONTACTS
 import com.google.android.gms.location.*
-import com.google.android.gms.location.places.ui.PlacePicker
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -60,13 +52,18 @@ class DetailFragment : Fragment(),
         OnMapReadyCallback, GoogleMap.OnMarkerClickListener{
 
     private var fab: FloatingActionButton? = null
+    private var fabNav: FloatingActionButton? = null
+
     private var userId: String? = null
     private var directionId: Int? = null
     private var directionName: String? = null
     private var myDirection: Direction? = null
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
 
     private lateinit var map: GoogleMap
-
+//    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    var userLocation: Location? = null
 
     //    private var listener: OnFragmentInteractionListener? = null
     var contacts = ArrayList<Contact>()
@@ -75,14 +72,14 @@ class DetailFragment : Fragment(),
     var name = ""
 
     companion object {
-        val PERMISSIONS_REQUEST_READ_CONTACTS = 100
         @JvmStatic
-        fun newInstance(userId: String, directionId: Int, directionName: String) =
+        fun newInstance(userId: String, directionId: Int, directionName: String, _contacts: ArrayList<Contact>) =
                 DetailFragment().apply {
                     arguments = Bundle().apply {
                         putString(USER_ID, userId)
                         putInt(DIRECTION_ID, directionId)
                         putString(DIRECTION_NAME, directionName)
+                        contacts = _contacts
                     }
                 }
     }
@@ -94,6 +91,10 @@ class DetailFragment : Fragment(),
             directionId = it.getInt(DIRECTION_ID)
             directionName = it.getString(DIRECTION_NAME)
         }
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(activity!!)
+        getLocation()
+
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -101,31 +102,15 @@ class DetailFragment : Fragment(),
         (activity as AppCompatActivity).supportActionBar?.title = directionName
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_detail, container, false)
-        loadContacts()
+//        loadContacts()
         directionsViewModel = AllDirectionsViewModel(activity?.application!!, userId!!)
 
         directionsViewModel!!.getDiectionById(directionId!!).observe(this, Observer {
             Log.d("DIRECTIONS", it.toString())
             var direction = it!![0]
             updateDetailView(direction)
-
             myDirection = direction
-//            nameField.text = direction.name
-//            addressField.text = direction.address
-//            cityField.text = direction.city
-//            stateField.text = direction.state
-//            zipField.text = direction.zip
-//            categoryField.text = direction.category
-//            if(direction.contact != null) {
-//                contacts.forEach{
-//                    if (it.id == direction.contact) {
-//                        contactField.text = it.name
-//                        if(it.picUri != null) {
-//                            imageView.setImageBitmap(it.picUri)
-//                        }
-//                    }
-//                }
-//            }
+
         })
 
         fab = view.findViewById<FloatingActionButton>(R.id.fabDetail)
@@ -135,9 +120,20 @@ class DetailFragment : Fragment(),
             editDirectionDialog.listener = this
             editDirectionDialog.show(fragmentManager!!, "editDirection")
         }
-//*** swipe to delete
-//        setRecyclerViewItemTouchListener()
-//***
+        fabNav = view.findViewById<FloatingActionButton>(R.id.fabNavigation)
+
+        fabNav!!.setOnClickListener {
+
+            var addr = getLatLong(myDirection!!)
+
+            Log.d("LOCATION", userLocation.toString())
+            var uri = "http://maps.google.com/maps?saddr=" + userLocation!!.latitude + "," +
+                    userLocation!!.longitude + "&daddr=" + addr!!.latitude + "," + addr.longitude;
+            Log.d("LOCATION", uri)
+            var intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri))
+            startActivity(intent);
+        }
+
         return view
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -193,6 +189,28 @@ class DetailFragment : Fragment(),
         }
 
         return address
+    }
+    private fun getLocation() {
+        if (ActivityCompat.checkSelfPermission(context!!,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(activity as Activity,
+                    arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST_CODE)
+            return
+        }
+
+//        map.isMyLocationEnabled = true
+
+        fusedLocationClient.lastLocation.addOnSuccessListener(activity as Activity) { location ->
+
+            if (location != null) {
+                userLocation = location
+//                val currentLatLng = LatLng(location.latitude, location.longitude)
+//                placeMarkerOnMap(currentLatLng)
+//                map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 8f))
+            }
+        }
+//        return userLocation
+
     }
 
 

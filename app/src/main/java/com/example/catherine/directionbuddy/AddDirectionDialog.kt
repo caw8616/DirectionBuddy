@@ -25,15 +25,10 @@ class AddDirectionDialog : DialogFragment(),  AdapterView.OnItemSelectedListener
     var contactNames = ArrayList<String>()
     var contacts = ArrayList<Contact>()
     var selectedContact:Contact? = null
-
-
     private lateinit var spinner: Spinner
-
-
-    public var listener: OnDialogFinishedListener? = null
+    var listener: OnDialogFinishedListener? = null
 
     companion object {
-
         @JvmStatic
         fun newInstance(_contacts: ArrayList<Contact>) =
                 AddDirectionDialog().apply {
@@ -64,14 +59,10 @@ class AddDirectionDialog : DialogFragment(),  AdapterView.OnItemSelectedListener
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapter
-        spinner.setSelection(0);
+        spinner.setSelection(0)
 
         spinner.setOnItemSelectedListener(this)
 
-
-
-        // Inflate and set the layout for the dialog
-        // Pass null as the parent view because its going in the dialog layout
         builder.setView(view)
                 // Add action buttons
                 .setPositiveButton("Save", DialogInterface.OnClickListener { _, _ ->

@@ -1,5 +1,7 @@
 package com.example.catherine.directionbuddy
 
+import android.Manifest
+import android.content.ContentResolver
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
 import android.support.v4.app.Fragment
@@ -13,6 +15,9 @@ import kotlinx.android.synthetic.main.activity_direction_buddy.*
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.provider.ContactsContract
 import android.view.Menu
 import android.view.MenuItem
 import com.google.android.gms.common.api.ApiException
@@ -25,6 +30,10 @@ class DirectionBuddy : AppCompatActivity() {
     //718694433470-db2v2o8qtetn7lipk6lvlbnv010g8s21.apps.googleusercontent.com
     companion object {
         val RC_SIGN_IN = 1
+        const val PERMISSIONS_REQUEST_READ_CONTACTS = 100
+        const val LOCATION_PERMISSION_REQUEST_CODE = 1
+        const val REQUEST_CHECK_SETTINGS = 2
+        const val PLACE_PICKER_REQUEST = 3
     }
 
     var mGoogleSignInClient: GoogleSignInClient? = null
@@ -219,6 +228,98 @@ class DirectionBuddy : AppCompatActivity() {
         }
     }
 
+    fun loadContacts() {
+        Log.d("Contacts", "Loading Contacts...")
+        var builder = ArrayList<Contact>()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(
+                        Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            Log.d("Contacts", "Permission Not Granted...")
+
+            requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS),
+                    DirectionBuddy.PERMISSIONS_REQUEST_READ_CONTACTS)
+            //callback onRequestPermissionsResult
+        } else {
+            Log.d("Contacts", "Permission Granted...")
+
+            builder = getContacts()
+//            listContacts.text = builder.toString()
+//            Log.d("Contacts", builder.toString())
+        }
+    }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
+                                            grantResults: IntArray) {
+        if (requestCode == DirectionBuddy.PERMISSIONS_REQUEST_READ_CONTACTS) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("Contacts", "After Request permission granted...")
+                loadContacts()
+            } else {
+                Log.d("Contacts", "After Request permission not granted...")
+                //  toast("Permission must be granted in order to display contacts information")
+            }
+        }
+    }
+    private fun getContacts(): ArrayList<Contact> {
+        Log.d("Contacts", "Getting Contacts...")
+
+//        val builder = ArrayList<Contact>()
+        val resolver: ContentResolver = contentResolver;
+        val cursor = resolver.query(ContactsContract.Contacts.CONTENT_URI, null,
+                null, null, null)
+//        Log.d("Contacts", "Curser count..."+cursor.count)
+        val contacts = ArrayList<Contact>()
+
+        if (cursor.count > 0) {
+            while (cursor.moveToNext()) {
+//                Log.d("Contacts", "Contact Display Name: "+cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts)))
+                val contact = Contact()
+
+                val id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID))
+                contact.id = id
+                val name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
+                contact.name = name;
+                val phoneNumber = (cursor.getString(
+                        cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))).toInt()
+//                Log.d("Contacts", "Contact: "+id+" "+name+" "+phoneNumber)
+
+                if (phoneNumber > 0) {
+                    val phoneNums = ArrayList<String>()
+                    val cursorPhone = contentResolver.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?", arrayOf(id), null)
+
+                    if(cursorPhone.count > 0) {
+                        while (cursorPhone.moveToNext()) {
+                            val phoneNumValue = cursorPhone.getString(
+                                    cursorPhone.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                            phoneNums.add(phoneNumValue)
+                        }
+                    }
+                    contact.phoneNumber = phoneNums
+                    cursorPhone.close()
+                }
+                val cursorAddress = contentResolver.query(
+                        ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_URI,null,
+                        ContactsContract.CommonDataKinds.StructuredPostal.CONTACT_ID+ "=?",  arrayOf(id), null)
+//                Log.d("Contacts", "Curser Address count..."+cursorAddress.count)
+
+                if (cursorAddress.count > 0) {
+                    while (cursorAddress.moveToNext()) {
+                        val address = cursorAddress.getString(cursorAddress.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS))
+                        contact.address = address
+                    }
+                }
+                cursorAddress.close()
+
+                contacts.add(contact)
+            }
+        } else {
+//               toast("No contacts available!")
+        }
+        cursor.close()
+        Log.d("Contacts", contacts.toString())
+        return contacts
+    }
 }
 
 

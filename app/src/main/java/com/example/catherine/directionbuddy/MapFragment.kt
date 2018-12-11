@@ -38,6 +38,9 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
 import android.widget.Toast
+import com.example.catherine.directionbuddy.DirectionBuddy.Companion.LOCATION_PERMISSION_REQUEST_CODE
+import com.example.catherine.directionbuddy.DirectionBuddy.Companion.PLACE_PICKER_REQUEST
+import com.example.catherine.directionbuddy.DirectionBuddy.Companion.REQUEST_CHECK_SETTINGS
 import com.example.catherine.directionbuddy.entities.Direction
 import com.example.catherine.directionbuddy.viewmodels.AllDirectionsViewModel
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
@@ -75,9 +78,6 @@ class MapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListe
 
 
     companion object {
-        const val LOCATION_PERMISSION_REQUEST_CODE = 1
-        const val REQUEST_CHECK_SETTINGS = 2
-        const val PLACE_PICKER_REQUEST = 3
         @JvmStatic
         fun newInstance(_userId: String, _username :String ) =
                 MapFragment().apply {

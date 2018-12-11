@@ -3,7 +3,10 @@ package com.example.catherine.directionbuddy
 import android.Manifest
 import android.arch.lifecycle.Observer
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -81,12 +84,12 @@ class DirectionFragment : Fragment(),
         directionsViewModel = AllDirectionsViewModel(activity?.application!!, userId!!)
 
         mAdapter = DirectionAdapter(this,
-                mutableListOf<Direction>(), this)
+                mutableListOf<Direction>(), mutableListOf<Contact>(), this)
 
 
         directionsViewModel!!.getAllDirections().observe(this, Observer {
             Log.d("DIRECTIONS", it.toString())
-            mAdapter!!.addAll(it ?: emptyList())
+            mAdapter!!.addAll(it ?: emptyList(), contacts)
         })
 
     }
@@ -147,7 +150,6 @@ class DirectionFragment : Fragment(),
             }
         }
     }
-    //swipe to delete code
     private fun setRecyclerViewItemTouchListener() {
         val itemTouchCallback = object : ItemTouchHelper.SimpleCallback(0,
                 ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
@@ -207,7 +209,7 @@ class DirectionFragment : Fragment(),
     } //setRecyclerViewItemTouchListener
     //new *** added
     override fun onItemClicked(directionId: Int, directionName: String) {
-        val fragment = DetailFragment.newInstance(userId,directionId, directionName)
+        val fragment = DetailFragment.newInstance(userId,directionId, directionName, contacts)
         activity!!.supportFragmentManager
                 .beginTransaction()
                 .setCustomAnimations(R.anim.design_bottom_sheet_slide_in, R.anim.design_bottom_sheet_slide_out)
@@ -225,7 +227,7 @@ class DirectionFragment : Fragment(),
             Log.d("Contacts", "Permission Not Granted...")
 
             requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS),
-                    DetailFragment.PERMISSIONS_REQUEST_READ_CONTACTS)
+                    DirectionBuddy.PERMISSIONS_REQUEST_READ_CONTACTS)
             //callback onRequestPermissionsResult
         } else {
             Log.d("Contacts", "Permission Granted...")
@@ -238,7 +240,7 @@ class DirectionFragment : Fragment(),
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>,
                                             grantResults: IntArray) {
-        if (requestCode == DetailFragment.PERMISSIONS_REQUEST_READ_CONTACTS) {
+        if (requestCode == DirectionBuddy.PERMISSIONS_REQUEST_READ_CONTACTS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d("Contacts", "After Request permission granted...")
                 loadContacts()
@@ -303,6 +305,7 @@ class DirectionFragment : Fragment(),
                     }
                 }
                 cursorAddress.close()
+                contact.picUri = getContactPhoto(id)
 
                 cont.add(contact)
             }
@@ -313,6 +316,23 @@ class DirectionFragment : Fragment(),
         Log.d("Contacts", contacts.toString())
         contacts = cont
         return builder
+    }
+    fun getContactPhoto(contactId:String): Bitmap? {
+        var photo: Bitmap? = null
+        try {
+            val inputStream = ContactsContract.Contacts.openContactPhotoInputStream(context!!.getContentResolver(),
+                    ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId.toLong()))
+
+            if (inputStream != null) {
+                photo = BitmapFactory.decodeStream(inputStream)
+            }
+
+            inputStream!!.close()
+
+        }  catch (e: Exception) {
+            Log.e("Error", e.toString())
+        }
+        return photo
     }
 
 // ****

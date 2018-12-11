@@ -16,7 +16,6 @@
 
     </android.support.v7.widget.RecyclerView>
 
-
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabDirection"
         android:layout_width="wrap_content"
@@ -25,5 +24,7 @@
         android:tint="@android:color/white"
         app:layout_anchor="@id/recycler_viewDirection"
         app:layout_anchorGravity="bottom|end"
-        app:srcCompat="@android:drawable/ic_input_add" />
+        app:srcCompat="@android:drawable/ic_input_add"
+        app:useCompatPadding="true"/>
+
 </android.support.design.widget.CoordinatorLayout>
